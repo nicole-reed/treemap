@@ -6,30 +6,33 @@ import './App.css';
 function App() {
 
   useEffect(async () => {
+    console.log(window.screen.width, ' screen width')
+
     try {
       const data = await axios.get('https://cdn.freecodecamp.org/testable-projects-fcc/data/tree_map/video-game-sales-data.json')
       // console.log(data)
       treeMap(data.data)
-      // drawMap(countiesResponse.data, educationResponse.data)
     } catch (error) {
       console.log('error fetching data:\n', error)
     }
   }, [])
 
   const treeMap = (data) => {
-    // console.log('data', data)
+
     const root = d3.hierarchy(data);
-    // console.log('root', root)
+
     const treemapLayout = d3.treemap();
 
+    const width = window.screen.width < 1200 ? window.screen.width * .9 : 1000;
+    const height = width * .6;
+
     treemapLayout
-      .size([1000, 600])
+      .size([width, height])
 
     root.sum((d) => d.value);
-    // console.log('root modified', root)
 
     treemapLayout(root)
-    // console.log('root.children', root.children)
+
 
     const consoles = root.children.map((item) => item.data.name)
     console.log('consoles', consoles)
@@ -43,17 +46,17 @@ function App() {
 
     const svg = d3.select('#chart')
       .append('svg')
-      .attr('width', 1000)
-      .attr('height', 600);
+      .attr('width', width)
+      .attr('height', height);
 
     svg.selectAll('rect')
       .data(root.descendants())
       .enter()
       .append('rect')
-      .attr('x', function (d) { return d.x0; })
-      .attr('y', function (d) { return d.y0; })
-      .attr('width', function (d) { return d.x1 - d.x0; })
-      .attr('height', function (d) { return d.y1 - d.y0; })
+      .attr('x', (d) => d.x0)
+      .attr('y', (d) => d.y0)
+      .attr('width', (d) => d.x1 - d.x0)
+      .attr('height', (d) => d.y1 - d.y0)
       .attr('class', 'tile')
       .attr('data-name', (d) => d.data.name)
       .attr('data-category', (d) => d.data.category)
@@ -63,39 +66,40 @@ function App() {
       .append("title")
       .attr('id', 'tooltip')
       .attr('data-value', (d) => d.data.value)
-      .text((d) => `Game: ${d.data.name}\nConsole: ${d.data.category}\n Value: ${d.data.value}`);
+      .text((d) => `Game: ${d.data.name}\nConsole: ${d.data.category}\nValue: ${d.data.value}`);
 
     const legend = d3.select('#legend')
       .append('svg')
-      .attr('width', 100)
-      .attr('height', 600)
+      .attr('width', width * .1)
+      .attr('height', height)
 
     const legendColors = d3.scaleOrdinal()
       .domain(consoles)
       .range(colors);
+
+    const rectHeight = height / 36;
+    const rectWidth = width / 50;
 
     legend.selectAll('rect')
       .data(consoles)
       .enter()
       .append('rect')
       .attr('x', 0)
-      .attr('y', (d, i) => i * 30)
+      .attr('y', (d, i) => i * (rectHeight + 5))
       .attr('class', 'legend-item')
-      .attr('width', 20)
-      .attr('height', 20)
+      .attr('width', rectWidth)
+      .attr('height', rectHeight)
       .style('fill', (d) => legendColors(d))
 
     legend.selectAll('text')
       .data(consoles)
       .enter()
       .append('text')
-      .attr('x', 20)
-      .attr('y', (d, i) => 12 + (i * 30))
+      .attr('x', rectWidth + 3)
+      .attr('y', (d, i) => i * (rectHeight + 5) + (rectHeight / 2))
       .text((d) => d)
       .style("alignment-baseline", "middle")
-      .style('font-size', '15px')
-
-
+      .style('font-size', `${height / 36}px`)
   }
 
   return (
